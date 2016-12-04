@@ -1,0 +1,62 @@
+#!/bin/sh
+# $Id$
+
+# grep 从 configure.in 匹配以 'PHP_EXTRA_VERSION=' 起始的行
+#   得到结果是 PHP_EXTRA_VERSION= 的形式，注意是一个字符串.
+# eval 将grep得到的结果执行了(当成赋值操作)，所以才有后面的检测.
+eval `grep '^PHP_EXTRA_VERSION=' configure.in`
+
+# configure.in 中你可以看到四类版本号，MAJOR MINOR RELEASE EXTRA.
+# 5.6.25-dev：MAJOR=5，MINOR=5，RELEASE=25，EXTRA=dev
+# 可以看出来，用途就是检测是不是dev版本.
+case "$PHP_EXTRA_VERSION" in
+  *-dev)
+    dev=1
+    ;;
+  *)
+    dev=0
+    ;;
+esac
+
+devok=0
+debug=no
+
+# 该文件可以传一个参数，--force 或 --debug
+while test $# -gt 0; do
+  if test "$1" = "--force"; then
+    devok=1
+    echo "Forcing buildconf"
+  fi
+
+  if test "$1" = "--debug"; then
+    debug=yes
+  fi
+
+  shift
+done
+
+# -a 的意思是&&，-o 的意思是||
+# 非dev版本的情况下，./buildconf会提示：不建议在代码里运行buildconf.
+# 可加 --force 强制执行.
+if test "$dev" = "0" -a "$devok" = "0"; then
+  echo "You should not run buildconf in a release package."
+  echo "use buildconf --force to override this check."
+  exit 1
+fi
+
+if test "$devok" = "1"; then
+  echo "Removing configure caches"
+  rm -rf autom4te.cache config.cache
+fi
+
+rm -f generated_lists
+
+# buildconf 加debug，对应这里执行编译设开启warning.
+# ${MAKE:-make} 如果没有$MAKE 就使用make命令.
+# -s 静默模式，详细看 `man make`.
+# -f 指定Makefile文件，build/build.mk.
+if test "$debug" = "yes"; then
+  ${MAKE:-make} -s -f build/build.mk SUPPRESS_WARNINGS=""
+else
+  ${MAKE:-make} -s -f build/build.mk
+fi
