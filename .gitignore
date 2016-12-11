@@ -1,0 +1,17 @@
+# build/build.mk 生成的文件
+
+generated_lists
+buildmk.stamp
+
+# build/build2.mk 生成的文件
+
+mkinstalldirs
+install-sh
+missing
+aclocal.m4
+ext/*/configure.in
+ext/*/acinclude.m4
+configure
+
+
+autom4te.cache

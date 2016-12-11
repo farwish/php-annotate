@@ -17,19 +17,19 @@
 # $Id$ 
 #
 
+# 含 makefile_am_files, config_m4_files 两个变量.
 include generated_lists
 
+# 需要生成.
 TOUCH_FILES = mkinstalldirs install-sh missing
 
-# 这几个文件在源码顶层目录内.
+# 文件在源码顶层目录内.
 LT_TARGETS = ltmain.sh config.guess config.sub
 
 config_h_in = main/php_config.h.in
 
-# 要生成的目标文件.
 targets = $(TOUCH_FILES) configure $(config_h_in)
 
-# 如果没有被赋值，进行赋值.
 PHP_AUTOCONF ?= 'autoconf'
 PHP_AUTOHEADER ?= 'autoheader'
 
@@ -37,6 +37,7 @@ SUPPRESS_WARNINGS ?= 2>&1 | (egrep -v '(AC_TRY_RUN called without default to all
 
 all: $(targets)
 
+# 4. rebuilding main/php_config.h.in
 $(config_h_in): configure
 # explicitly remove target since autoheader does not seem to work 
 # correctly otherwise (timestamps are not updated)
@@ -44,14 +45,16 @@ $(config_h_in): configure
 	@rm -f $@
 	$(PHP_AUTOHEADER) $(SUPPRESS_WARNINGS)
 
+# 1. 生成 mkinstalldirs install-sh missing
 $(TOUCH_FILES):
 	touch $(TOUCH_FILES)
 
+# 2. rebuilding aclocal.m4
 aclocal.m4: configure.in acinclude.m4
 	@echo rebuilding $@
 	cat acinclude.m4 ./build/libtool.m4 > $@
 
-# 
+# 3. rebuilding configure
 configure: aclocal.m4 configure.in $(config_m4_files)
 	@echo rebuilding $@
 	@rm -f $@
