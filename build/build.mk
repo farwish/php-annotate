@@ -25,17 +25,21 @@ STAMP = buildmk.stamp
 
 ALWAYS = generated_lists
 
-# 默认目标all，依赖后面两个文件，命令编译 build/build2.mk，@ 不显示执行过程.
+# 没有 make -f 指定 target，第一个总是默认目标，后面是依赖文件。
+# （ 命令编译 build/build2.mk，@ 不显示执行过程. ）
+# 没有找到依赖的情况下，会先执行下面的.
 all: $(STAMP) $(ALWAYS)
 	@$(MAKE) -s -f build/build2.mk
 
-# 目标文件：无依赖：执行命令
+# make -f build/build.mk generated_lists 查看效果。
+# generated_lists 文件包含两个变量 makefile_am_files config_m4_files.
 generated_lists:
 	@echo makefile_am_files = Zend/Makefile.am TSRM/Makefile.am > $@
 	@echo config_m4_files = Zend/Zend.m4 TSRM/tsrm.m4 TSRM/threads.m4 \
 		Zend/acinclude.m4 ext/*/config*.m4 sapi/*/config.m4 >> $@
 
-# 目标文件：依赖：执行命令检测 buildconf，生成 buildmk.stamp.
+# make -f build/build.mk buildmk.stamp 查看效果。
+# 检测 buildconf 并生成 buildmk.stamp.
 $(STAMP): build/buildcheck.sh
 	@build/buildcheck.sh $(STAMP)
 
@@ -68,4 +72,6 @@ gitclean-work:
 	fi; \
 	git clean -X -f -d;
 
+# buildmk.stamp snapshot 都是伪目标。
+# make -f build/build.mk buildmk.stamp / make -f build/build.mk snapshot
 .PHONY: $(ALWAYS) snapshot
